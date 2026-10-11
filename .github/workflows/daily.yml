@@ -1,0 +1,26 @@
+name: Daily video
+
+on:
+  schedule:
+    - cron: "30 2 * * *"   # roz 8:00 AM IST
+  workflow_dispatch:        # manual test button
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - run: python main.py
+      - name: Failure alert
+        if: failure()
+        run: |
+          curl -s "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="Aaj ka run fail ho gaya, GitHub Actions mein error check karo"
